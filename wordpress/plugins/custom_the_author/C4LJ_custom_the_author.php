@@ -11,11 +11,36 @@ Author URI: http://xplus3.net/
 <?php
 function c4lj_get_the_author($user_author) {
 	global $post;
-	$custom_author = get_post_meta($post->ID, "author", TRUE);
-  if ( $custom_author == "" ) {
-    return $user_author;
-  }
-	$custom_author = str_replace('& ', '&amp; ', $custom_author);
+	$custom_author = '';
+	# We didn't use Co-Authors-Plus until issue 26 or so
+	if ( function_exists( 'coauthors_links' ) && ($post->ID > 9000) ) {
+		$coauthors = get_coauthors();
+		$i = 0;
+		foreach( $coauthors as $coauthor ):
+			$author_name = "<span property='name'>" . $coauthor->display_name . "</span>";
+			if ($i) {
+				$custom_author .= ", ";
+			} else {
+				$custom_author .= "by ";
+			}
+			$custom_author .= "<span property='author' typeof='Person' resource='";
+			if ($coauthor->website) {
+				$custom_author .= "$coauthor->website'>"; 
+				$custom_author .= "<a href='" . $coauthor->website ."' property='url'>$author_name</a>";
+			} else {
+				$custom_author .= "#author-$i>$author_name";
+			}
+			$custom_author .= "</span>";
+			$i++;
+		endforeach;
+	} else {
+		$custom_author = get_post_meta($post->ID, "author", TRUE);
+		if ( $custom_author == "" ) {
+			return $user_author;
+		}
+		$custom_author = str_replace('& ', '&amp; ', $custom_author);
+	}
+
 	return $custom_author;
 }
 
